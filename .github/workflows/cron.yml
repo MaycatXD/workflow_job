@@ -1,0 +1,54 @@
+name: DapodikSQ Auto Sync (Setiap 2 Jam)
+
+on:
+  schedule:
+    # Berjalan otomatis setiap 2 jam sekali (12 kali sehari: jam 00, 02, 04, 06, 08, 10, dst UTC)
+    - cron: '0 */2 * * *'
+  workflow_dispatch: # Tombol manual "Run workflow" di GitHub agar bisa dites kapan saja
+
+jobs:
+  run-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Siapkan Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Pasang Puppeteer (Headless Chrome)
+        run: npm install puppeteer
+
+      - name: Eksekusi Cron & Tembus Proteksi aes.js ByetHost
+        env:
+          TARGET_URL: 'https://hostgmkns.byethost32.com/dapodiksq/cron_sync.php?key=SmarQuestSync2026'
+        run: |
+          node -e "
+          const puppeteer = require('puppeteer');
+
+          (async () => {
+            console.log('🚀 Memulai browser headless...');
+            const browser = await puppeteer.launch({
+              headless: 'new',
+              args: ['--no-sandbox', '--disable-setuid-sandbox']
+            });
+
+            const page = await browser.newPage();
+            await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36');
+
+            const url = process.env.TARGET_URL;
+            console.log('🌐 Mengunjungi URL cron_sync di ByetHost...');
+
+            // Buka URL dan biarkan JavaScript aes.js ByetHost diproses otomatis
+            await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+
+            // Jeda 5 detik agar script PHP selesai menyimpan ke MySQL
+            await new Promise(r => setTimeout(r, 5000));
+
+            const responseText = await page.evaluate(() => document.body.innerText);
+            console.log('📄 Respons dari Server:');
+            console.log(responseText);
+
+            await browser.close();
+            console.log('✅ Sinkronisasi berhasil dieksekusi!');
+          })();
+          "
