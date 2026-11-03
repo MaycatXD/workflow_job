@@ -2,19 +2,14 @@ name: DapodikSQ Auto Sync (Setiap 2 Jam)
 
 on:
   schedule:
-    # Berjalan otomatis setiap 2 jam sekali (12 kali sehari: jam 00, 02, 04, 06, 08, 10, dst UTC)
+    # Berjalan otomatis setiap 2 jam sekali (12 kali sehari)
     - cron: '0 */2 * * *'
-  workflow_dispatch: # Tombol manual "Run workflow" di GitHub agar bisa dites kapan saja
+  workflow_dispatch: # Tombol manual untuk tes
 
 jobs:
   run-sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Siapkan Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Pasang Puppeteer (Headless Chrome)
         run: npm install puppeteer
 
